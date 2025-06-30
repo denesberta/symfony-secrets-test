@@ -1,0 +1,103 @@
+@startuml
+!theme materia
+
+title Secret Server Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rect
+
+package "Controller" {
+    class SecretController {
+        - secretService: SecretService
+        - formatterFactory: ResponseFormatterFactory
+        - validator: ValidatorInterface
+        - errorFormatter: ValidationErrorFormatter
+        + addSecret(Request): Response
+        + getSecret(string, Request): Response
+    }
+}
+
+package "Service" {
+    class SecretService {
+        - entityManager: EntityManagerInterface
+        - secretRepository: SecretRepository
+        + createSecret(string, int, int): Secret
+        + getValidSecretByHash(string): Secret
+    }
+
+    class ResponseFormatterFactory {
+        - formatters: iterable<ResponseFormatterInterface>
+        - defaultFormatter: ResponseFormatterInterface
+        + create(Request): ResponseFormatterInterface
+    }
+
+    class ValidationErrorFormatter {
+        + format(ConstraintViolationListInterface): array
+    }
+}
+
+package "DTO (Data Transfer Object)" {
+    class CreateSecretRequest {
+        + secret: ?string
+        + expireAfterViews: ?int
+        + expireAfter: ?int
+    }
+}
+
+package "Entity" {
+    class Secret {
+        - id: ?int
+        - hash: string
+        - secretText: string
+        - createdAt: DateTimeImmutable
+        - expiresAt: ?DateTimeImmutable
+        - remainingViews: int
+        + isValid(): bool
+        + decrementViews(): void
+    }
+}
+
+package "Repository" {
+    class SecretRepository {
+        + findOneByHash(string): ?Secret
+    }
+}
+
+package "Formatter (Strategy Pattern)" {
+    interface ResponseFormatterInterface {
+        + supports(string): bool
+        + format(mixed, int): Response
+    }
+
+    class JsonResponseFormatter
+    class XmlResponseFormatter
+}
+
+' --- Relationships ---
+
+' Controller Dependencies
+SecretController ..> SecretService : uses
+SecretController ..> ResponseFormatterFactory : uses
+SecretController ..> ValidationErrorFormatter : uses
+SecretController ..> CreateSecretRequest : uses
+SecretController ..> "ValidatorInterface" : uses
+
+' Service Dependencies
+SecretService ..> "EntityManagerInterface" : uses
+SecretService ..> SecretRepository : uses
+SecretService ..> Secret : creates & manages
+
+' Repository Dependencies
+SecretRepository ..> Secret : queries for
+
+' Formatter Dependencies & Implementations
+ResponseFormatterFactory ..> ResponseFormatterInterface : creates
+SecretController ..> ResponseFormatterInterface : uses
+
+JsonResponseFormatter .up.|> ResponseFormatterInterface
+XmlResponseFormatter .up.|> ResponseFormatterInterface
+
+JsonResponseFormatter ..> "SerializerInterface" : uses
+XmlResponseFormatter ..> "SerializerInterface" : uses
+
+@enduml

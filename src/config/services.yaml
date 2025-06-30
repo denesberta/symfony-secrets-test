@@ -1,0 +1,24 @@
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    _instanceof:
+        App\Formatter\ResponseFormatterInterface:
+            tags: ['app.response_formatter']
+
+    # Explicitly define the factory to inject the tagged formatters
+    App\Service\ResponseFormatterFactory:
+        arguments:
+            $formatters: !tagged_iterator app.response_formatter
+            # We will define the JSON formatter as the default fallback
+            $defaultFormatter: '@App\Formatter\JsonResponseFormatter'
+

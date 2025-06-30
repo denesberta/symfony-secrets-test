@@ -1,0 +1,25 @@
+### IntelliJ
+.idea
+*.iml
+
+### VSCode
+.vscode/*
+!.vscode/launch.json
+
+### Composer
+src/composer.phar
+src/vendor/
+
+## Symfony
+src/.env
+src/.env.local
+src/.idea
+src/.env.local.php
+src/.env.*.local
+src/config/secrets/prod/prod.decrypt.private.php
+src/public/bundles/
+src/var/
+
+### PhpUnit ###
+src/phpunit.xml
+src/.phpunit.cache/
