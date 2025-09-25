@@ -3,7 +3,6 @@
 namespace App\Formatter;
 
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
@@ -19,7 +18,6 @@ class XmlResponseFormatter implements ResponseFormatterInterface
   {
     $this->serializer = $serializer;
   }
-  
   
   /**
    * @parentDoc
