@@ -20,7 +20,7 @@ class SecretRepository extends ServiceEntityRepository
   {
     parent::__construct($registry, Secret::class);
   }
-  
+
   /**
    * Finds a single secret by its unique hash
    *

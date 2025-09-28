@@ -20,7 +20,7 @@ class SecretController extends AbstractController
   private ResponseFormatterFactory $formatterFactory;
   private ValidatorInterface $validator;
   private ValidationErrorFormatter $errorFormatter;
-  
+
   public function __construct(
     SecretService $secretService,
     ResponseFormatterFactory $formatterFactory,
@@ -32,7 +32,7 @@ class SecretController extends AbstractController
     $this->validator = $validator;
     $this->errorFormatter = $errorFormatter;
   }
-  
+
   /**
    * Creates a new secret from POST data after validation
    * The response format is determined by the 'Accept' header
@@ -43,7 +43,7 @@ class SecretController extends AbstractController
   public function addSecret(Request $request): Response
   {
     $formatter = $this->formatterFactory->create($request);
-    
+
     $createSecretRequest = new CreateSecretRequest();
     $createSecretRequest->secret = $request->request->get('secret');
     $createSecretRequest->expireAfterViews = $request->request->get('expireAfterViews') !== null
@@ -52,32 +52,32 @@ class SecretController extends AbstractController
     $createSecretRequest->expireAfter = $request->request->get('expireAfter') !== null
       ? (int)$request->request->get('expireAfter')
       : null;
-    
+
     $errors = $this->validator->validate($createSecretRequest);
-    
+
     if (count($errors) > 0) {
       return $formatter->format(
         ['errors' => $this->errorFormatter->format($errors)],
         Response::HTTP_BAD_REQUEST
       );
     }
-    
+
     try {
       $secret = $this->secretService->createSecret(
         $createSecretRequest->secret,
         $createSecretRequest->expireAfterViews,
         $createSecretRequest->expireAfter
       );
-      
+
       return $formatter->format($secret, Response::HTTP_OK);
     } catch (\Exception $e) {
       return $formatter->format(
-        ['error' => 'An unexpected server error occurred.'],
+        ['error' => 'An unexpected server error occurred.Error: ' . $e],
         Response::HTTP_INTERNAL_SERVER_ERROR
       );
     }
   }
-  
+
   /**
    * Retrieves a secret by its hash
    * The response format (JSON or XML) is determined by the 'Accept' header
@@ -88,14 +88,14 @@ class SecretController extends AbstractController
   {
     $secret = $this->secretService->getValidSecretByHash($hash);
     $formatter = $this->formatterFactory->create($request);
-    
+
     if (!$secret) {
       return $formatter->format(
         ['error' => 'Secret not found.'],
         Response::HTTP_NOT_FOUND
       );
     }
-    
+
     return $formatter->format(
       $secret,
       Response::HTTP_OK

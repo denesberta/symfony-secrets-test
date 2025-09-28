@@ -13,13 +13,13 @@ class SecretService
 {
   private EntityManagerInterface $entityManager;
   private SecretRepository $secretRepository;
-  
+
   public function __construct(EntityManagerInterface $entityManager, SecretRepository $secretRepository)
   {
     $this->entityManager = $entityManager;
     $this->secretRepository = $secretRepository;
   }
-  
+
   /**
    * Creates a new secret and persists it to the database
    *
@@ -34,22 +34,22 @@ class SecretService
     $secret = new Secret();
     $secret->setSecretText($secretText);
     $secret->setRemainingViews($expireAfterViews);
-    
+
     // Generate a unique hash
     $secret->setHash(hash('sha256', uniqid(microtime(), true)));
-    
+
     // Set expiration time if provided else never expires
     if ($expireAfterMinutes > 0) {
       $expiresAt = (new \DateTimeImmutable())->add(new \DateInterval("PT{$expireAfterMinutes}M"));
       $secret->setExpiresAt($expiresAt);
     }
-    
+
     $this->entityManager->persist($secret);
     $this->entityManager->flush();
-    
+
     return $secret;
   }
-  
+
   /**
    * Retrieves a secret by its hash, handling expiration and view count logic
    *
@@ -59,23 +59,23 @@ class SecretService
   public function getValidSecretByHash(string $hash): ?Secret
   {
     $secret = $this->secretRepository->findOneByHash($hash);
-    
+
     // Return null if no secret is found
     if (!$secret) {
       return null;
     }
-    
+
     if (!$secret->isValid()) {
       // Clean up by deleting the invalid secret from the database
       $this->entityManager->remove($secret);
       $this->entityManager->flush();
       return null;
     }
-    
+
     // The secret is valid, so decrement its view count before returning
     $secret->decrementViews();
     $this->entityManager->flush();
-    
+
     return $secret;
   }
 }
